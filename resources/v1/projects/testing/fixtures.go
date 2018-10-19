@@ -9,8 +9,8 @@ import (
 	fake "github.com/gophercloud/gophercloud/testhelper/client"
 )
 
-// HandleListProjectsSuccessfully creates an HTTP handler at `/v1/domains/:domain_id/projects` on the test handler mux
-// that responds with a `List` response.
+// HandleListProjectsSuccessfully creates an HTTP handler at `/domains/:domain_id/projects` on the
+// test handler mux that responds with a list of (two) projects.
 func HandleListProjectsSuccessfully(t *testing.T) {
 	th.Mux.HandleFunc("/domains/uuid-for-germany/projects", func(w http.ResponseWriter, r *http.Request) {
 		th.TestMethod(t, r, "GET")
@@ -65,6 +65,7 @@ func HandleListProjectsSuccessfully(t *testing.T) {
 
 		if (r.URL.Query().Get("service") == "shared" || r.URL.Query().Get("area") == "shared") &&
 			r.URL.Query().Get("resource") == "things" {
+			th.TestHeader(t, r, "X-Limes-Cluster-Id", "fakecluster")
 			fmt.Fprintf(w, `
 				{
 					"projects": [
@@ -207,6 +208,8 @@ func HandleListProjectsSuccessfully(t *testing.T) {
 	})
 }
 
+// HandleGetProjectSuccessfully creates an HTTP handler at `/domains/:domain_id/projects/:project_id` on the
+// test handler mux that responds with a single project.
 func HandleGetProjectSuccessfully(t *testing.T) {
 	th.Mux.HandleFunc("/domains/uuid-for-germany/projects/uuid-for-berlin", func(w http.ResponseWriter, r *http.Request) {
 		th.TestMethod(t, r, "GET")
@@ -258,6 +261,35 @@ func HandleGetProjectSuccessfully(t *testing.T) {
 			return
 		}
 
+		if (r.URL.Query().Get("service") == "shared" || r.URL.Query().Get("area") == "shared") &&
+			r.URL.Query().Get("resource") == "things" {
+			th.TestHeader(t, r, "X-Limes-Cluster-Id", "fakecluster")
+			fmt.Fprintf(w, `
+				{
+					"project": {
+						"id": "uuid-for-berlin",
+						"name": "berlin",
+						"parent_id": "uuid-for-germany",
+						"services": [
+							{
+								"type": "shared",
+								"area": "shared",
+								"resources": [
+									{
+										"name": "things",
+										"quota": 10,
+										"usage": 2
+									}
+								],
+								"scraped_at": 22
+							}
+						]
+					}
+				}
+			`)
+			return
+		}
+
 		fmt.Fprintf(w, `
 			{
 				"project": {
@@ -290,42 +322,26 @@ func HandleGetProjectSuccessfully(t *testing.T) {
 	})
 }
 
-func HandlePutProjectSuccessfully(t *testing.T) {
+// HandleUpdateProjectSuccessfully creates an HTTP handler at `/domains/:domain_id/projects/:project_id` on the
+// test handler mux that tests project updates.
+func HandleUpdateProjectSuccessfully(t *testing.T) {
 	th.Mux.HandleFunc("/domains/uuid-for-germany/projects/uuid-for-berlin", func(w http.ResponseWriter, r *http.Request) {
 		th.TestMethod(t, r, "PUT")
 		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		th.TestHeader(t, r, "X-Limes-Cluster-Id", "fakecluster")
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusAccepted)
+	})
+}
 
-		fmt.Fprintf(w, `
-			{
-				"project": {
-					"id": "uuid-for-berlin",
-					"name": "berlin",
-					"parent_id": "uuid-for-germany",
-					"services": [
-						{
-							"type": "shared",
-							"area": "shared",
-							"resources": [
-								{
-									"name": "capacity",
-									"unit": "B",
-									"quota": 42,
-									"usage": 23
-								},
-								{
-									"name": "things",
-									"quota": 10,
-									"usage": 2
-								}
-							],
-							"scraped_at": 22
-						}
-					]
-				}
-			}
-		`)
+// HandleSyncProjectSuccessfully creates an HTTP handler at `/domains/:domain_id/projects/:project_id/sync` on the
+// test handler mux that syncs a project.
+func HandleSyncProjectSuccessfully(t *testing.T) {
+	th.Mux.HandleFunc("/domains/uuid-for-germany/projects/uuid-for-dresden/sync", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		th.TestHeader(t, r, "X-Limes-Cluster-Id", "fakecluster")
+
+		w.WriteHeader(http.StatusAccepted)
 	})
 }
