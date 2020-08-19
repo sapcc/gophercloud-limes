@@ -1,9 +1,4 @@
-# gophercloud-limes
+# Archived project. No maintenance.
 
-Gophercloud extension for [Limes](https://github.com/sapcc/limes).
-
-## Useful links
-
-* [GoDoc](http://godoc.org/github.com/sapcc/gophercloud-limes)
-* As reference documentation, you can see the source code for [limesctl](https://github.com/sapcc/limesctl) which depends on gophercloud-limes to provide most of its functionality.
-
+This project is archived and not maintained anymore. Consider switching to the
+new [gophercloud-sapcc](https://github.com/sapcc/gophercloud-sapcc).
